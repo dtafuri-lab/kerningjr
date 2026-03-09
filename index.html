@@ -3,174 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Potentiometer Demo</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <title>Etch A Sketch 3D</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fredoka+One&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      padding: 40px;
-      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f7f7f5;
-      color: #333;
-      min-height: 100vh;
+      background: #ffffff;
+      overflow: hidden;
+      font-family: 'Space Grotesk', sans-serif;
+      width: 100vw;
+      height: 100vh;
     }
-    
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
+    #threeCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 1;
     }
-    
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 40px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    
-    h1 {
-      font-size: 14px;
-      font-weight: 500;
-      color: #333;
-      margin: 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .subtitle {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 12px;
-      color: #6e6e6e;
-      margin-top: 6px;
-    }
-    
-    #controls {
-      display: flex;
-      gap: 10px;
-    }
-    
-    button {
-      padding: 8px 16px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 12px;
+    /* ── Bouncing text ── */
+    #bouncer {
+      position: fixed;
+      z-index: 50;
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      font-size: 32px;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      pointer-events: auto;
       cursor: pointer;
-      background: #fff;
-      color: #333;
-      border: 1px solid #d0d0d0;
-      transition: all 0.15s ease;
-    }
-    
-    button:hover {
-      background: #333;
-      color: #fff;
-      border-color: #333;
-    }
-    
-    button:disabled {
-      background: #f0f0f0;
-      color: #999;
-      border-color: #e0e0e0;
-      cursor: default;
-    }
-    
-    button:disabled:hover {
-      background: #f0f0f0;
-      color: #999;
-    }
-    
-    #status {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 11px;
-      margin-bottom: 30px;
-      padding: 12px 16px;
-      background: #fff;
-      border: 1px solid #e0e0e0;
-    }
-    
-    .connected {
-      border-left: 3px solid #17ac10 !important;
-    }
-    
-    .disconnected {
-      border-left: 3px solid #999 !important;
-    }
-    
-    #canvas-container {
-      background: #fff;
-      border: 1px solid #e0e0e0;
-    }
-    
-    #canvas-container canvas {
-      display: block;
-    }
-    
-    .info-section {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-    
-    .info-block {
-      font-family: 'IBM Plex Mono', monospace;
-    }
-    
-    .info-label {
-      font-size: 10px;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-    
-    .info-value {
-      font-size: 24px;
-      color: #333;
+      padding: 8px 16px;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div>
-        <h1>Potentiometer → Text</h1>
-      </div>
-      <div id="controls">
-        <button id="connectBtn">Connect</button>
-        <button id="disconnectBtn" disabled>Disconnect</button>
-      </div>
-    </header>
-    
-    <div id="status" class="disconnected">Waiting for connection...</div>
-    
-    <div id="canvas-container"></div>
-    
-    <div class="info-section">
-      <div class="info-block">
-        <div class="info-label">Raw Value</div>
-        <div class="info-value" id="rawValue">—</div>
-      </div>
-      <div class="info-block">
-        <div class="info-label">Text Size</div>
-        <div class="info-value" id="textSize">—</div>
-      </div>
-      <div class="info-block">
-        <div class="info-label">Status</div>
-        <div class="info-value" id="connectionStatus">●</div>
-      </div>
-    </div>
-  </div>
-  
-  <script src="sketch.js"></script>
+  <!-- Bouncing DVD-style text -->
+  <div id="bouncer">Connect to Arduino</div>
+
+  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="app.js"></script>
+  <script>
+    // ── DVD Bouncing Text ──
+    (function() {
+      const el = document.getElementById('bouncer');
+      let x = 100, y = 80;
+      let vx = 2.2, vy = 1.8;
+
+      const colors = [
+        '#d4a843', '#1a6dd4', '#2d8c3c',
+        '#e8739a', '#f5a623', '#6b4caf', '#17ac10',
+        '#00b4d8', '#ff6f61', '#9b5de5'
+      ];
+      let colorIdx = 0;
+
+      function pickColor() {
+        el.style.color = colors[colorIdx % colors.length];
+        colorIdx++;
+      }
+      pickColor();
+
+      function tick() {
+        if (el.classList.contains('gone')) return;
+
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const rect = el.getBoundingClientRect();
+        const elW = rect.width;
+        const elH = rect.height;
+
+        x += vx;
+        y += vy;
+
+        if (x + elW >= w) { x = w - elW; vx *= -1; pickColor(); }
+        if (x <= 0)       { x = 0;       vx *= -1; pickColor(); }
+        if (y + elH >= h) { y = h - elH; vy *= -1; pickColor(); }
+        if (y <= 0)       { y = 0;       vy *= -1; pickColor(); }
+
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      // Listen for connect — hide bouncer
+      window.addEventListener('serial-connected', () => {
+        el.classList.add('gone');
+        el.style.display = 'none';
+      });
+
+      // Click bouncer to connect
+      el.addEventListener('click', () => {
+        if (window.connectSerial) window.connectSerial();
+      });
+    })();
+  </script>
 </body>
 </html>

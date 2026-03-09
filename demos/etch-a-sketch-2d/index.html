@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etch A Sketch</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Fredoka+One&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+
+    body {
+      /* Cozy landscape wallpaper — Bob Ross energy */
+      background:
+        linear-gradient(180deg,
+          #87CEEB 0%,      /* sky blue */
+          #a8d8ea 25%,
+          #f0e6d3 45%,     /* horizon haze */
+          #6b8f3c 46%,     /* grass line */
+          #4a7c2e 55%,
+          #3d6b26 70%,
+          #2d5a1e 100%
+        );
+      background-attachment: fixed;
+      font-family: 'IBM Plex Sans', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ─── Decorative clouds ─── */
+    body::before {
+      content: '☁️';
+      position: fixed;
+      top: 30px;
+      left: 8%;
+      font-size: 60px;
+      opacity: 0.6;
+      animation: floatCloud 20s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '☁️';
+      position: fixed;
+      top: 60px;
+      right: 12%;
+      font-size: 40px;
+      opacity: 0.4;
+      animation: floatCloud 28s ease-in-out infinite reverse;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes floatCloud {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(40px); }
+    }
+
+    /* ─── GIF stickers scattered around ─── */
+    .sticker {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      image-rendering: auto;
+    }
+
+    .sticker-star {
+      top: 15%;
+      right: 6%;
+      width: 80px;
+      animation: spin 4s linear infinite;
+    }
+
+    .sticker-rainbow {
+      bottom: 8%;
+      left: 4%;
+      width: 120px;
+      animation: bob 3s ease-in-out infinite;
+    }
+
+    .sticker-sparkle {
+      top: 25%;
+      left: 5%;
+      width: 60px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .sticker-flower {
+      bottom: 12%;
+      right: 5%;
+      width: 70px;
+      animation: bob 2.5s ease-in-out infinite 0.5s;
+    }
+
+    .sticker-sun {
+      top: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90px;
+      animation: spin 20s linear infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+
+    /* ─── Main wrapper ─── */
+    .page-wrap {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── Model picker (left sidebar) ─── */
+    .model-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 10px;
+    }
+
+    .model-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+      position: relative;
+    }
+
+    .model-swatch:hover {
+      transform: scale(1.1);
+    }
+
+    .model-swatch.active {
+      border-color: #333;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #333;
+    }
+
+    .model-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8px;
+      color: #999;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    /* ─── Etch body ─── */
+    .etch-body {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px 30px 40px;
+      box-shadow:
+        0 2px 6px rgba(0,0,0,0.08),
+        0 12px 40px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 740px;
+      border: 1px solid rgba(0,0,0,0.06);
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 24px;
+      letter-spacing: 0.5px;
+      background: linear-gradient(160deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.08));
+      transition: all 0.3s;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 6px 14px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      color: #333;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    button:hover {
+      background: #333;
+      color: #fff;
+      border-color: #333;
+    }
+
+    button:disabled {
+      opacity: 0.35;
+      cursor: default;
+      background: #fafafa;
+      color: #999;
+    }
+
+    /* Themed buttons (for colored models) */
+    .etch-body.themed button {
+      border-color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+    .etch-body.themed button:hover {
+      background: rgba(255,255,255,0.3);
+      border-color: rgba(255,255,255,0.5);
+    }
+    .etch-body.themed button:disabled {
+      opacity: 0.35;
+      color: rgba(255,255,255,0.5);
+    }
+
+    #canvas-container {
+      background: #eee;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.1);
+      border: 1px solid #e0e0e0;
+    }
+
+    #canvas-container canvas { display: block; }
+
+    .knobs {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0 20px;
+    }
+
+    .knob {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      position: relative;
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+
+    .knob.gold {
+      background:
+        repeating-conic-gradient(from 0deg, rgba(191,149,63,0.12) 0deg 10deg, rgba(252,246,186,0.2) 10deg 20deg),
+        radial-gradient(circle at 40% 35%, #fcf6ba, #bf953f 60%, #aa771c);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.6), inset 0 -1px 3px rgba(0,0,0,0.1);
+    }
+
+    .knob.silver {
+      background:
+        repeating-conic-gradient(from 0deg, rgba(0,0,0,0.05) 0deg 10deg, rgba(255,255,255,0.12) 10deg 20deg),
+        radial-gradient(circle at 40% 35%, #f0f0f0, #bbb 60%, #888);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.8), inset 0 -1px 3px rgba(0,0,0,0.1);
+    }
+
+    .knob.white-k {
+      background:
+        repeating-conic-gradient(from 0deg, rgba(0,0,0,0.03) 0deg 10deg, rgba(255,255,255,0.08) 10deg 20deg),
+        radial-gradient(circle at 40% 35%, #fff, #e8e8e8 60%, #d0d0d0);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.9), inset 0 -1px 2px rgba(0,0,0,0.05);
+    }
+
+    .knob::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 10px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 2px;
+    }
+
+    .knob-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: #999;
+      text-align: center;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: color 0.3s;
+    }
+
+    .etch-body.themed .knob-label { color: rgba(255,255,255,0.5); }
+
+    .knob-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ─── Toolbar row ─── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .color-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .color-btn:hover, .color-btn.active { border-color: #333; }
+    .etch-body.themed .color-btn { border-color: rgba(255,255,255,0.25); }
+    .etch-body.themed .color-btn:hover,
+    .etch-body.themed .color-btn.active { border-color: #fff; }
+
+    .color-picker, .size-picker { display: flex; gap: 6px; align-items: center; }
+
+    .size-btn {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      color: #333;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .size-btn:hover, .size-btn.active { background: #333; color: #fff; }
+    .etch-body.themed .size-btn { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; }
+    .etch-body.themed .size-btn:hover,
+    .etch-body.themed .size-btn.active { background: rgba(255,255,255,0.3); }
+
+    .divider {
+      width: 1px;
+      height: 20px;
+      background: #ddd;
+    }
+    .etch-body.themed .divider { background: rgba(255,255,255,0.2); }
+
+    /* ─── Gallery / Display overlay ─── */
+    .gallery-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      /* Living room wall vibe */
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 39px,
+          rgba(0,0,0,0.02) 39px,
+          rgba(0,0,0,0.02) 40px
+        ),
+        #e8ddd0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+
+    .gallery-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .gallery-wall {
+      background: #faf8f5;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .gallery-frame {
+      border: 14px solid;
+      border-image: linear-gradient(135deg, #8B7355, #D2B48C 30%, #8B6914 50%, #D2B48C 70%, #6B4226) 1;
+      box-shadow: 0 8px 50px rgba(0,0,0,0.25), inset 0 0 0 3px rgba(0,0,0,0.15);
+      background: #fff;
+      padding: 16px;
+      position: relative;
+      transform: scale(0.8) translateY(40px);
+      transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .gallery-overlay.visible .gallery-frame {
+      transform: scale(1) translateY(0);
+    }
+
+    .gallery-frame img {
+      display: block;
+      max-width: 600px;
+    }
+
+    .gallery-nail {
+      width: 8px;
+      height: 8px;
+      background: #999;
+      border-radius: 50%;
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .gallery-wire {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 16px;
+      border-bottom: 2px solid #aaa;
+      border-radius: 0 0 50% 50%;
+    }
+
+    .gallery-caption {
+      font-family: 'Caveat', cursive;
+      font-size: 28px;
+      color: #333;
+      text-align: center;
+      max-width: 500px;
+      line-height: 1.3;
+    }
+
+    .gallery-sub {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: #999;
+      margin-top: -12px;
+    }
+
+    .gallery-close {
+      margin-top: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 8px 20px;
+      border: 1px solid #ddd;
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .gallery-close:hover {
+      background: #333;
+      color: #fff;
+      border-color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tacky GIF stickers -->
+  <img class="sticker sticker-sun" src="https://media.giphy.com/media/3o7aCSPqXE5C6T8tBC/giphy.gif" alt="sun">
+  <img class="sticker sticker-star" src="https://media.giphy.com/media/l0MYt5jPR6QX5APm0/giphy.gif" alt="star">
+  <img class="sticker sticker-rainbow" src="https://media.giphy.com/media/SKGo6OYe24EBG/giphy.gif" alt="rainbow">
+  <img class="sticker sticker-sparkle" src="https://media.giphy.com/media/l4FGI8GoTL7N4DsyI/giphy.gif" alt="sparkle">
+  <img class="sticker sticker-flower" src="https://media.giphy.com/media/xUPGcMzfkOPknKBswo/giphy.gif" alt="flower">
+
+  <!-- Gallery / Display overlay -->
+  <div class="gallery-overlay" id="galleryOverlay">
+    <div class="gallery-wall">
+      <div class="gallery-frame">
+        <div class="gallery-nail"></div>
+        <div class="gallery-wire"></div>
+        <img id="galleryImg" src="" alt="Your masterpiece">
+      </div>
+      <div class="gallery-caption" id="galleryCaptionText">What a beautiful work of art.<br>It's time to hang this on the wall.</div>
+      <div class="gallery-sub">— The Curator</div>
+      <button class="gallery-close" id="galleryClose">← Back to drawing</button>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- Model picker sidebar -->
+    <div class="model-picker">
+      <div>
+        <div class="model-swatch active" data-model="classic"
+             style="background:#fff; border:1px solid #ddd;"
+             title="Classic White"></div>
+        <div class="model-label">Classic</div>
+      </div>
+      <div>
+        <div class="model-swatch" data-model="red"
+             style="background:#c1272d;"
+             title="Original Red"></div>
+        <div class="model-label">Red</div>
+      </div>
+      <div>
+        <div class="model-swatch" data-model="blue"
+             style="background:#1a4d8f;"
+             title="Midnight Blue"></div>
+        <div class="model-label">Blue</div>
+      </div>
+      <div>
+        <div class="model-swatch" data-model="pink"
+             style="background:#e8739a;"
+             title="Bubblegum"></div>
+        <div class="model-label">Pink</div>
+      </div>
+      <div>
+        <div class="model-swatch" data-model="black"
+             style="background:#1a1a1a;"
+             title="Noir"></div>
+        <div class="model-label">Noir</div>
+      </div>
+      <div>
+        <div class="model-swatch" data-model="green"
+             style="background:#2d6b4a;"
+             title="Forest"></div>
+        <div class="model-label">Forest</div>
+      </div>
+    </div>
+
+    <!-- Main Etch A Sketch -->
+    <div class="etch-body" id="etchBody">
+      <div class="top-bar">
+        <span class="title" id="etchTitle">Etch A Sketch</span>
+        <div class="controls">
+          <button id="connectBtn">Connect</button>
+          <button id="disconnectBtn" disabled>Disconnect</button>
+          <button id="clearBtn">Shake</button>
+          <button id="displayBtn">Display ✦</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="color-picker">
+          <div class="color-btn active" data-color="#333333" style="background:#333"></div>
+          <div class="color-btn" data-color="#c1272d" style="background:#c1272d"></div>
+          <div class="color-btn" data-color="#1a6dd4" style="background:#1a6dd4"></div>
+          <div class="color-btn" data-color="#2d8c3c" style="background:#2d8c3c"></div>
+          <div class="color-btn" data-color="#f5a623" style="background:#f5a623"></div>
+          <div class="color-btn" data-color="#ffffff" style="background:#fff"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="size-picker">
+          <div class="size-btn" data-size="1">S</div>
+          <div class="size-btn active" data-size="3">M</div>
+          <div class="size-btn" data-size="6">L</div>
+          <div class="size-btn" data-size="12">XL</div>
+        </div>
+      </div>
+
+      <div id="canvas-container"></div>
+
+      <div class="knobs">
+        <div class="knob-wrap">
+          <div class="knob gold" id="knobL"></div>
+          <div class="knob-label">← →</div>
+        </div>
+        <div class="knob-wrap">
+          <div class="knob gold" id="knobR"></div>
+          <div class="knob-label">↑ ↓</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="sketch.js"></script>
+</body>
+</html>
