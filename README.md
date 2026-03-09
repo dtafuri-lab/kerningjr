@@ -1,28 +1,52 @@
-# Potentiometer → Text (Web Serial demo)
+# Kerning Jr.
 
-This project is a small web demo that reads a potentiometer value from an Arduino over the Web Serial API and maps it to the size of text displayed with p5.js.
+**Kerning Jr.** is a playful, physical-computing web toy that connects a potentiometer (via Arduino) to a browser using the **Web Serial API** and **p5.js**. Turn the knob to interact with typography in real time — resize text, wash fonts, and play a mini-game called *The Font Wash*.
 
-What's in this repo
-- `index.html` — UI and controls
-- `sketch.js` — p5.js sketch that handles serial connection, parsing, and rendering
-- `arduino/potentiometer_serial/potentiometer_serial.ino` — example Arduino sketch (reads analog value and prints it over serial)
-- `font-morph.*` — experiments
+## What it does
 
-Quick local steps
-1. Serve the folder with a local HTTP server (required for Web Serial), e.g. `npx http-server` or `python3 -m http.server` in the project root.
-2. Open `http://localhost:8080` (or the port your server uses) in a Chromium-based browser that supports the Web Serial API (Chrome, Edge).
-3. Click "Connect" and select your Arduino serial port (Arduino should be running the example sketch at 9600 baud).
+1. An Arduino reads a potentiometer's analog value (0–1023) and streams it over serial at 9600 baud.
+2. A web page picks up those values through the Web Serial API (Chromium browsers only).
+3. p5.js maps the knob position to on-screen visuals — text size, water effects, cleaning progress, and more.
 
-How to push to GitHub
-1. Create a GitHub repo (or copy its URL if you already have one).
-2. On your machine run:
+## What's in this repo
 
-```bash
-cd "$(pwd)" # ensure you're in the project folder
-git remote add origin <REPO_URL>
-git push -u origin main
-```
+| File | Description |
+|------|-------------|
+| `font-morph.html` | **Kerning Jr. — The Font Wash** main page (the mini-game) |
+| `font-morph.js` | Game logic: target tracking, water animation, dirt particles, victory state |
+| `index.html` | Simpler demo — maps potentiometer value directly to text size |
+| `sketch.js` | p5.js sketch for the simple demo (serial connection, parsing, rendering) |
+| `arduino/potentiometer_serial/potentiometer_serial.ino` | Arduino sketch — reads the pot with noise filtering and prints averaged values over serial |
 
-If you'd like, I can add the remote and push for you — tell me the repo URL and whether you prefer HTTPS or SSH.
+## Hardware you need
 
-License: Unlicensed / your choice
+- An Arduino (Uno, Nano, etc.)
+- A potentiometer or trimpot
+- USB cable to connect the Arduino to your computer
+
+### Wiring (trimpot)
+
+| Trimpot pin | Connect to |
+|-------------|-----------|
+| Pin 1 (side with two pins) | **5 V** |
+| Pin 2 (side with two pins) | **GND** |
+| Pin 3 (alone on the other side) | **A0** |
+
+## Quick start
+
+1. **Flash the Arduino** — open `arduino/potentiometer_serial/potentiometer_serial.ino` in the Arduino IDE and upload it.
+2. **Serve the project folder** — Web Serial requires HTTPS or localhost, so use any local server:
+   ```bash
+   # pick one
+   npx http-server .
+   python3 -m http.server
+   ```
+3. **Open in Chrome / Edge** — navigate to `http://localhost:8080` (or whatever port your server prints).
+4. **Click "Connect"** and choose the Arduino's serial port.
+5. Turn the knob and watch the magic happen!
+
+> **Tip:** Open `font-morph.html` instead of `index.html` for the full Kerning Jr. experience.
+
+## License
+
+This project is currently unlicensed — feel free to add a license of your choice.
