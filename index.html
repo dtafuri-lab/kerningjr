@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potentiometer Demo</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f7f7f5;
+      color: #333;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    h1 {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .subtitle {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: #6e6e6e;
+      margin-top: 6px;
+    }
+    
+    #controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      background: #fff;
+      color: #333;
+      border: 1px solid #d0d0d0;
+      transition: all 0.15s ease;
+    }
+    
+    button:hover {
+      background: #333;
+      color: #fff;
+      border-color: #333;
+    }
+    
+    button:disabled {
+      background: #f0f0f0;
+      color: #999;
+      border-color: #e0e0e0;
+      cursor: default;
+    }
+    
+    button:disabled:hover {
+      background: #f0f0f0;
+      color: #999;
+    }
+    
+    #status {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      margin-bottom: 30px;
+      padding: 12px 16px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+    }
+    
+    .connected {
+      border-left: 3px solid #17ac10 !important;
+    }
+    
+    .disconnected {
+      border-left: 3px solid #999 !important;
+    }
+    
+    #canvas-container {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+    }
+    
+    #canvas-container canvas {
+      display: block;
+    }
+    
+    .info-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    
+    .info-block {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    
+    .info-label {
+      font-size: 10px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    
+    .info-value {
+      font-size: 24px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Potentiometer → Text</h1>
+      </div>
+      <div id="controls">
+        <button id="connectBtn">Connect</button>
+        <button id="disconnectBtn" disabled>Disconnect</button>
+      </div>
+    </header>
+    
+    <div id="status" class="disconnected">Waiting for connection...</div>
+    
+    <div id="canvas-container"></div>
+    
+    <div class="info-section">
+      <div class="info-block">
+        <div class="info-label">Raw Value</div>
+        <div class="info-value" id="rawValue">—</div>
+      </div>
+      <div class="info-block">
+        <div class="info-label">Text Size</div>
+        <div class="info-value" id="textSize">—</div>
+      </div>
+      <div class="info-block">
+        <div class="info-label">Status</div>
+        <div class="info-value" id="connectionStatus">●</div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="sketch.js"></script>
+</body>
+</html>

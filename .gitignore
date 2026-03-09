@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Node (in case you add tooling)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# VS Code
+.vscode/
+
+# Environment files
+.env
+
+# Build artifacts
+dist/
+build/
